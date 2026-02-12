@@ -2,7 +2,7 @@ Test Crash,https://httpstat.us/500
 mangerbouger,https://www.mangerbouger.fr/
 santementale,https://www.santementale-info-service.fr
 tabac,https://www.tabac-info-service.fr
-https://mois-sans-tabac.tabac-info-service.fr/
+Mois Sans Tabac,https://mois-sans-tabac.tabac-info-service.fr/
 vaccination,https://vaccination-info-service.fr
 alcool,https://www.alcool-info-service.fr/
 premiersjour,https://www.1000-premiers-jours.fr/fr
