@@ -3,13 +3,13 @@ name: Check Sites
 on:
   schedule:
     - cron: '*/30 * * * *' # Tourne toutes les 30 min
-  workflow_dispatch: # Permet de lancer manuellement pour tester
+  workflow_dispatch: # Permet de lancer manuellement
 
 permissions:
-  contents: write # Important pour sauvegarder le JSON
+  contents: write # Important pour sauvegarder le fichier JSON
 
 jobs:
-  check-sites:
+  check-and-alert:
     runs-on: ubuntu-latest
     
     steps:
@@ -22,16 +22,16 @@ jobs:
           python-version: '3.9'
 
       - name: Installer les dépendances
-        run: pip install -r requirements.txt
+        run: pip install requests
 
-      - name: Lancer le script
+      - name: Lancer le script de surveillance
         env:
-          EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          # C'EST ICI QUE ÇA BLOQUAIT ! On donne la clé au script :
+          TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
         run: python monitor.py
 
       - name: Sauvegarder le résultat
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update etat_sites.json"
+          commit_message: "Mise à jour état des sites"
           file_pattern: "etat_sites.json"
