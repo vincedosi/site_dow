@@ -3,25 +3,8 @@ import os
 import json
 from datetime import datetime
 
-# --- CONFIGURATION API BREVO ---
-API_KEY = os.environ.get("BREVO_KEY")
-SENDER_EMAIL = "alerte@mon-monitor.com" # Tu peux mettre n'importe quoi ici, ex: no-reply@ton-domaine.com
-SENDER_NAME = "🤖 Bot Monitor"
-
-def charger_emails_depuis_fichier():
-    """Lit le fichier mail.txt"""
-    emails = []
-    if os.path.exists("mail.txt"):
-        with open("mail.txt", "r", encoding="utf-8") as f:
-            for ligne in f:
-                email = ligne.strip()
-                if email and not email.startswith("#"):
-                    emails.append(email)
-    
-    if not emails:
-        print("⚠️ Fichier mail.txt vide !")
-        return []
-    return emails
+# --- CONFIGURATION (Via GitHub Secrets) ---
+TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK")
 
 def charger_sites_depuis_fichier():
     sites = []
@@ -33,54 +16,69 @@ def charger_sites_depuis_fichier():
                     sites.append({"nom": parts[0].strip(), "url": parts[1].strip()})
     return sites
 
-def envoyer_alerte_api(site_nom, site_url, erreur_msg):
-    if not API_KEY:
-        print("⚠️ Clé API Brevo manquante. Alerte ignorée.")
+def envoyer_notif_teams(site_nom, site_url, erreur_msg):
+    if not TEAMS_WEBHOOK_URL:
+        print("⚠️ Pas d'URL Teams configurée.")
         return
 
-    destinataires = charger_emails_depuis_fichier()
-    if not destinataires: return
-
-    # On prépare la liste des destinataires au format Brevo
-    to_list = [{"email": email} for email in destinataires]
-
-    url_api = "https://api.brevo.com/v3/smtp/email"
-    
+    # Format ADAPTIVE CARD (Pour les nouveaux Workflows Teams)
     payload = {
-        "sender": {"name": SENDER_NAME, "email": SENDER_EMAIL},
-        "to": to_list,
-        "subject": f"🚨 ALERTE: {site_nom} est DOWN",
-        "htmlContent": f"""
-        <html><body>
-            <h2>⚠️ Problème détecté</h2>
-            <p>Le site <b>{site_nom}</b> ({site_url}) ne répond plus.</p>
-            <p><b>Erreur :</b> {erreur_msg}</p>
-            <p><i>Check effectué à {datetime.now().strftime('%H:%M')}</i></p>
-        </body></html>
-        """
-    }
-    
-    headers = {
-        "accept": "application/json",
-        "api-key": API_KEY,
-        "content-type": "application/json"
+        "type": "message",
+        "attachments": [
+            {
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "contentUrl": None,
+                "content": {
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                    "type": "AdaptiveCard",
+                    "version": "1.4",
+                    "msteams": {"width": "Full"},
+                    "body": [
+                        {
+                            "type": "TextBlock",
+                            "text": f"🚨 ALERTE : {site_nom} est DOWN",
+                            "size": "Large",
+                            "weight": "Bolder",
+                            "color": "Attention",
+                            "wrap": True
+                        },
+                        {
+                            "type": "FactSet",
+                            "facts": [
+                                {"title": "Heure", "value": datetime.now().strftime('%H:%M')},
+                                {"title": "URL", "value": site_url},
+                                {"title": "Erreur", "value": erreur_msg}
+                            ]
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "type": "Action.OpenUrl",
+                            "title": "Ouvrir le site",
+                            "url": site_url
+                        }
+                    ]
+                }
+            }
+        ]
     }
 
     try:
-        response = requests.post(url_api, json=payload, headers=headers)
-        if response.status_code == 201:
-            print(f"✅ Alerte envoyée avec succès à {len(destinataires)} personnes.")
+        response = requests.post(TEAMS_WEBHOOK_URL, json=payload)
+        # Les Workflows renvoient souvent 202 Accepted
+        if response.status_code in [200, 202]:
+            print(f"✅ Notif Teams envoyée pour {site_nom}")
         else:
-            print(f"❌ Erreur API Brevo: {response.text}")
+            print(f"❌ Erreur Teams ({response.status_code}) : {response.text}")
     except Exception as e:
-        print(f"❌ Erreur connexion: {e}")
+        print(f"❌ Erreur de connexion Teams : {e}")
 
 def verifier_sites():
     client_sites = charger_sites_depuis_fichier()
     if not client_sites: return
 
     resultats = []
-    print(f"--- Démarrage Check (Mode API) ---")
+    print(f"--- Démarrage Check ---")
 
     for site in client_sites:
         status = "UP"
@@ -92,11 +90,11 @@ def verifier_sites():
             if r.status_code != 200:
                 status = "DOWN"
                 detail = f"Erreur {r.status_code}"
-                envoyer_alerte_api(site['nom'], site['url'], detail)
+                envoyer_notif_teams(site['nom'], site['url'], detail)
         except Exception as e:
             status = "DOWN"
             detail = str(e)
-            envoyer_alerte_api(site['nom'], site['url'], detail)
+            envoyer_notif_teams(site['nom'], site['url'], detail)
 
         resultats.append({
             "nom": site["nom"],
