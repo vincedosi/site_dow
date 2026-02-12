@@ -1,0 +1,72 @@
+[
+    {
+        "nom": "Google",
+        "url": "https://www.google.com",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:17:52"
+    },
+    {
+        "nom": "Mon Client A",
+        "url": "https://www.le-site-du-client.com",
+        "status": "DOWN",
+        "detail": "HTTPSConnectionPool(host='www.le-site-du-client.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='www.le-site-du-client.com', port=443): Failed to resolve 'www.le-site-du-client.com' ([Errno -2] Name or service not known)\"))",
+        "last_check": "2026-02-12 09:17:52"
+    },
+    {
+        "nom": "Mon Client B",
+        "url": "https://www.autre-client.fr",
+        "status": "DOWN",
+        "detail": "HTTPSConnectionPool(host='www.autre-client.fr', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='www.autre-client.fr', port=443): Failed to resolve 'www.autre-client.fr' ([Errno -2] Name or service not known)\"))",
+        "last_check": "2026-02-12 09:17:52"
+    },
+    {
+        "nom": "Site Test Crash",
+        "url": "https://site-bidon-12345.com",
+        "status": "DOWN",
+        "detail": "HTTPSConnectionPool(host='site-bidon-12345.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='site-bidon-12345.com', port=443): Failed to resolve 'site-bidon-12345.com' ([Errno -2] Name or service not known)\"))",
+        "last_check": "2026-02-12 09:17:53"
+    },
+    {
+        "nom": "mangerbouger",
+        "url": "https://www.mangerbouger.fr/",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:17:54"
+    },
+    {
+        "nom": "santementale",
+        "url": "https://www.santementale-info-service.fr",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:17:55"
+    },
+    {
+        "nom": "tabac",
+        "url": "https://www.tabac-info-service.fr",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:17:56"
+    },
+    {
+        "nom": "vaccination",
+        "url": "https://vaccination-info-service.fr",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:17:57"
+    },
+    {
+        "nom": "alcool",
+        "url": "https://www.alcool-info-service.fr/",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:17:58"
+    },
+    {
+        "nom": "premiersjour",
+        "url": "https://www.1000-premiers-jours.fr/fr",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:17:59"
+    }
+]
