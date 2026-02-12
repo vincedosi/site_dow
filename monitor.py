@@ -1,40 +1,26 @@
 import requests
-import smtplib
 import os
 import json
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
-# --- CONFIGURATION SERVEUR (Via GitHub Secrets) ---
-EMAIL_USER = os.environ.get("EMAIL_USER")
-EMAIL_PASS = os.environ.get("EMAIL_PASS")
-SMTP_SERVER = os.environ.get("SMTP_SERVER")
-# On force la conversion en entier pour le port, avec 465 par défaut
-try:
-    SMTP_PORT = int(os.environ.get("SMTP_PORT", 465))
-except ValueError:
-    SMTP_PORT = 465
+# --- CONFIGURATION API BREVO ---
+API_KEY = os.environ.get("BREVO_KEY")
+SENDER_EMAIL = "alerte@mon-monitor.com" # Tu peux mettre n'importe quoi ici, ex: no-reply@ton-domaine.com
+SENDER_NAME = "🤖 Bot Monitor"
 
 def charger_emails_depuis_fichier():
-    """Lit le fichier mail.txt pour trouver les destinataires"""
+    """Lit le fichier mail.txt"""
     emails = []
-    nom_fichier = "mail.txt"
-    
-    # Si le fichier existe, on le lit
-    if os.path.exists(nom_fichier):
-        with open(nom_fichier, "r", encoding="utf-8") as f:
+    if os.path.exists("mail.txt"):
+        with open("mail.txt", "r", encoding="utf-8") as f:
             for ligne in f:
                 email = ligne.strip()
-                # On garde l'email s'il n'est pas vide et ne commence pas par #
                 if email and not email.startswith("#"):
                     emails.append(email)
     
-    # SÉCURITÉ : Si la liste est vide ou le fichier absent, on s'envoie le mail à soi-même (l'expéditeur)
-    if not emails and EMAIL_USER:
-        print("⚠️ Fichier mail.txt vide ou absent. Envoi à l'expéditeur par défaut.")
-        return [EMAIL_USER]
-        
+    if not emails:
+        print("⚠️ Fichier mail.txt vide !")
+        return []
     return emails
 
 def charger_sites_depuis_fichier():
@@ -47,62 +33,70 @@ def charger_sites_depuis_fichier():
                     sites.append({"nom": parts[0].strip(), "url": parts[1].strip()})
     return sites
 
-def envoyer_alerte(site_nom, site_url, erreur_msg):
-    if not EMAIL_USER or not EMAIL_PASS or not SMTP_SERVER:
-        print("⚠️ Config Email incomplète. Alerte ignorée.")
+def envoyer_alerte_api(site_nom, site_url, erreur_msg):
+    if not API_KEY:
+        print("⚠️ Clé API Brevo manquante. Alerte ignorée.")
         return
 
-    # On récupère la liste des gens à prévenir
     destinataires = charger_emails_depuis_fichier()
+    if not destinataires: return
 
-    subject = f"🚨 ALERTE: {site_nom} est DOWN"
-    body = f"Le site {site_nom} ({site_url}) est hors ligne.\nErreur : {erreur_msg}\nHeure : {datetime.now().strftime('%H:%M')}"
+    # On prépare la liste des destinataires au format Brevo
+    to_list = [{"email": email} for email in destinataires]
 
-    msg = MIMEMultipart()
-    msg['From'] = EMAIL_USER
-    # On joint les emails par une virgule pour l'en-tête "A"
-    msg['To'] = ", ".join(destinataires)
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
+    url_api = "https://api.brevo.com/v3/smtp/email"
+    
+    payload = {
+        "sender": {"name": SENDER_NAME, "email": SENDER_EMAIL},
+        "to": to_list,
+        "subject": f"🚨 ALERTE: {site_nom} est DOWN",
+        "htmlContent": f"""
+        <html><body>
+            <h2>⚠️ Problème détecté</h2>
+            <p>Le site <b>{site_nom}</b> ({site_url}) ne répond plus.</p>
+            <p><b>Erreur :</b> {erreur_msg}</p>
+            <p><i>Check effectué à {datetime.now().strftime('%H:%M')}</i></p>
+        </body></html>
+        """
+    }
+    
+    headers = {
+        "accept": "application/json",
+        "api-key": API_KEY,
+        "content-type": "application/json"
+    }
 
     try:
-        # Gestion automatique SSL (465) ou STARTTLS (587)
-        if SMTP_PORT == 587:
-            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-            server.starttls()
+        response = requests.post(url_api, json=payload, headers=headers)
+        if response.status_code == 201:
+            print(f"✅ Alerte envoyée avec succès à {len(destinataires)} personnes.")
         else:
-            server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT)
-            
-        with server:
-            server.login(EMAIL_USER, EMAIL_PASS)
-            # send_message gère l'envoi à la liste présente dans msg['To']
-            server.send_message(msg)
-            print(f"📧 Mail envoyé à {len(destinataires)} destinataires via {SMTP_SERVER}")
-            
+            print(f"❌ Erreur API Brevo: {response.text}")
     except Exception as e:
-        print(f"❌ Erreur envoi mail : {e}")
+        print(f"❌ Erreur connexion: {e}")
 
 def verifier_sites():
     client_sites = charger_sites_depuis_fichier()
     if not client_sites: return
 
     resultats = []
-    print(f"--- Démarrage Check ---")
+    print(f"--- Démarrage Check (Mode API) ---")
 
     for site in client_sites:
         status = "UP"
         detail = "OK"
+        print(f"Test: {site['nom']}")
         
         try:
             r = requests.get(site['url'], headers={'User-Agent': 'MonitorScript'}, timeout=10)
             if r.status_code != 200:
                 status = "DOWN"
                 detail = f"Erreur {r.status_code}"
-                envoyer_alerte(site['nom'], site['url'], detail)
+                envoyer_alerte_api(site['nom'], site['url'], detail)
         except Exception as e:
             status = "DOWN"
             detail = str(e)
-            envoyer_alerte(site['nom'], site['url'], detail)
+            envoyer_alerte_api(site['nom'], site['url'], detail)
 
         resultats.append({
             "nom": site["nom"],
