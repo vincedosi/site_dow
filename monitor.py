@@ -1,20 +1,28 @@
 import requests
 import os
 import json
+from datetime import datetime
 
-# Récupération du Secret
+# --- CONFIGURATION ---
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK")
 
-def test_force_teams():
-    print("--- DÉBUT DU TEST FORCE ---")
-    
+def charger_sites_depuis_fichier():
+    sites = []
+    if os.path.exists("url.txt"):
+        with open("url.txt", "r", encoding="utf-8") as f:
+            for ligne in f:
+                parts = ligne.strip().split(",")
+                if len(parts) >= 2 and not ligne.startswith("#"):
+                    sites.append({"nom": parts[0].strip(), "url": parts[1].strip()})
+    return sites
+
+def envoyer_notif_teams(site_nom, site_url, erreur_msg):
     if not TEAMS_WEBHOOK_URL:
-        print("❌ ERREUR : Le secret TEAMS_WEBHOOK est vide ou mal configuré !")
         return
 
-    print(f"URL trouvée (début) : {TEAMS_WEBHOOK_URL[:30]}...")
+    print(f"⚠️ Envoi alerte Teams pour {site_nom}...")
 
-    # On tente le format le plus simple du monde pour Teams (Adaptive Card basique)
+    # On utilise le format QUI MARCHE (Adaptive Card simple)
     payload = {
         "type": "message",
         "attachments": [
@@ -28,13 +36,25 @@ def test_force_teams():
                     "body": [
                         {
                             "type": "TextBlock",
-                            "text": "👋 CECI EST UN TEST",
+                            "text": f"🚨 ALERTE : {site_nom} est DOWN",
                             "size": "Large",
-                            "weight": "Bolder"
+                            "weight": "Bolder",
+                            "color": "Attention"
                         },
                         {
-                            "type": "TextBlock",
-                            "text": "Si tu lis ça, c'est que la connexion marche !"
+                            "type": "FactSet",
+                            "facts": [
+                                {"title": "Heure", "value": datetime.now().strftime('%H:%M')},
+                                {"title": "URL", "value": site_url},
+                                {"title": "Erreur", "value": erreur_msg}
+                            ]
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "type": "Action.OpenUrl",
+                            "title": "Ouvrir le site",
+                            "url": site_url
                         }
                     ]
                 }
@@ -42,26 +62,56 @@ def test_force_teams():
         ]
     }
 
-    print("Envoi de la requête à Teams...")
-    
     try:
-        response = requests.post(TEAMS_WEBHOOK_URL, json=payload)
-        
-        # C'EST ICI QUE TOUT SE JOUE
-        print(f"👉 CODE RETOUR : {response.status_code}")
-        print(f"👉 RÉPONSE TEXTE : {response.text}")
-        
-        if response.status_code == 202:
-            print("✅ SUCCÈS : Teams a accepté le message (202 Accepted). Regarde ton canal !")
-        elif response.status_code == 200:
-            print("✅ SUCCÈS : Message envoyé (200 OK).")
-        else:
-            print("❌ ÉCHEC : Teams a refusé le message.")
-
+        requests.post(TEAMS_WEBHOOK_URL, json=payload)
     except Exception as e:
-        print(f"❌ CRASH : {e}")
+        print(f"Erreur envoi Teams : {e}")
 
-    print("--- FIN DU TEST ---")
+def verifier_sites():
+    client_sites = charger_sites_depuis_fichier()
+    if not client_sites:
+        print("Pas de sites dans url.txt")
+        return
+
+    resultats = []
+    print(f"--- Démarrage Check de {len(client_sites)} sites ---")
+
+    for site in client_sites:
+        status = "UP"
+        detail = "OK"
+        print(f"Test: {site['nom']}...", end="")
+        
+        try:
+            # Timeout court (10s) pour ne pas bloquer
+            r = requests.get(site['url'], headers={'User-Agent': 'MonitorScript'}, timeout=10)
+            
+            if r.status_code != 200:
+                status = "DOWN"
+                detail = f"Erreur HTTP {r.status_code}"
+                print(f" ❌ DOWN ({detail})")
+                envoyer_notif_teams(site['nom'], site['url'], detail)
+            else:
+                print(" ✅ OK")
+                
+        except Exception as e:
+            status = "DOWN"
+            detail = str(e)
+            print(f" ❌ CRASH ({detail})")
+            envoyer_notif_teams(site['nom'], site['url'], detail)
+
+        # On enregistre tout pour le futur Dashboard Streamlit
+        resultats.append({
+            "nom": site["nom"],
+            "url": site["url"],
+            "status": status,
+            "detail": detail,
+            "last_check": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
+
+    # Sauvegarde du fichier JSON
+    with open("etat_sites.json", "w") as f:
+        json.dump(resultats, f, indent=4)
+    print("--- Terminé et Sauvegardé ---")
 
 if __name__ == "__main__":
-    test_force_teams()
+    verifier_sites()
