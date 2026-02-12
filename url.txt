@@ -1,0 +1,4 @@
+Google,https://www.google.com
+Mon Client A,https://www.le-site-du-client.com
+Mon Client B,https://www.autre-client.fr
+Site Test Crash,https://site-bidon-12345.com
