@@ -4,55 +4,55 @@
         "url": "https://httpstat.us/500",
         "status": "DOWN",
         "detail": "('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "last_check": "2026-02-12 09:34:39"
+        "last_check": "2026-02-12 09:35:36"
     },
     {
         "nom": "mangerbouger",
         "url": "https://www.mangerbouger.fr/",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:34:41"
+        "last_check": "2026-02-12 09:35:37"
     },
     {
         "nom": "santementale",
         "url": "https://www.santementale-info-service.fr",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:34:42"
+        "last_check": "2026-02-12 09:35:38"
     },
     {
         "nom": "tabac",
         "url": "https://www.tabac-info-service.fr",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:34:42"
+        "last_check": "2026-02-12 09:35:39"
     },
     {
         "nom": "Mois Sans Tabac",
         "url": "https://mois-sans-tabac.tabac-info-service.fr/",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:34:43"
+        "last_check": "2026-02-12 09:35:40"
     },
     {
         "nom": "vaccination",
         "url": "https://vaccination-info-service.fr",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:34:43"
+        "last_check": "2026-02-12 09:35:40"
     },
     {
         "nom": "alcool",
         "url": "https://www.alcool-info-service.fr/",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:34:44"
+        "last_check": "2026-02-12 09:35:41"
     },
     {
         "nom": "premiersjour",
         "url": "https://www.1000-premiers-jours.fr/fr",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:34:45"
+        "last_check": "2026-02-12 09:35:42"
     }
 ]
