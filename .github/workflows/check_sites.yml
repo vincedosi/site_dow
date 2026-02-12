@@ -1,0 +1,37 @@
+name: Check Sites
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # Tourne toutes les 30 min
+  workflow_dispatch: # Permet de lancer manuellement pour tester
+
+permissions:
+  contents: write # Important pour sauvegarder le JSON
+
+jobs:
+  check-sites:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Lancer le script
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        run: python monitor.py
+
+      - name: Sauvegarder le résultat
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update etat_sites.json"
+          file_pattern: "etat_sites.json"
