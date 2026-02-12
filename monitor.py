@@ -3,7 +3,7 @@ import os
 import json
 from datetime import datetime
 
-# --- CONFIGURATION (Via GitHub Secrets) ---
+# --- CONFIGURATION ---
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK")
 
 def charger_sites_depuis_fichier():
@@ -21,41 +21,38 @@ def envoyer_notif_teams(site_nom, site_url, erreur_msg):
         print("⚠️ Pas d'URL Teams configurée.")
         return
 
-    # Format ADAPTIVE CARD (Pour les nouveaux Workflows Teams)
+    # --- VERSION SIMPLIFIÉE ---
+    # On envoie juste du texte, c'est moins beau mais ça marche à 100%
+    message_text = f"🚨 **ALERTE DOWN** 🚨\n\nLe site **{site_nom}** ne répond pas.\n\n* **URL:** {site_url}\n* **Erreur:** {erreur_msg}\n* **Heure:** {datetime.now().strftime('%H:%M')}"
+    
+    # Payload compatible avec les nouveaux Workflows Teams
     payload = {
         "type": "message",
         "attachments": [
             {
                 "contentType": "application/vnd.microsoft.card.adaptive",
-                "contentUrl": None,
                 "content": {
                     "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
                     "type": "AdaptiveCard",
-                    "version": "1.4",
-                    "msteams": {"width": "Full"},
+                    "version": "1.2",
                     "body": [
                         {
                             "type": "TextBlock",
-                            "text": f"🚨 ALERTE : {site_nom} est DOWN",
-                            "size": "Large",
+                            "text": message_text,
+                            "wrap": True,
+                            "size": "Medium",
                             "weight": "Bolder",
-                            "color": "Attention",
-                            "wrap": True
+                            "color": "Attention"
                         },
                         {
-                            "type": "FactSet",
-                            "facts": [
-                                {"title": "Heure", "value": datetime.now().strftime('%H:%M')},
-                                {"title": "URL", "value": site_url},
-                                {"title": "Erreur", "value": erreur_msg}
+                            "type": "ActionSet",
+                            "actions": [
+                                {
+                                    "type": "Action.OpenUrl",
+                                    "title": "Ouvrir le site",
+                                    "url": site_url
+                                }
                             ]
-                        }
-                    ],
-                    "actions": [
-                        {
-                            "type": "Action.OpenUrl",
-                            "title": "Ouvrir le site",
-                            "url": site_url
                         }
                     ]
                 }
@@ -64,14 +61,15 @@ def envoyer_notif_teams(site_nom, site_url, erreur_msg):
     }
 
     try:
+        print(f"Envoi tentative vers Teams...")
         response = requests.post(TEAMS_WEBHOOK_URL, json=payload)
-        # Les Workflows renvoient souvent 202 Accepted
-        if response.status_code in [200, 202]:
-            print(f"✅ Notif Teams envoyée pour {site_nom}")
-        else:
-            print(f"❌ Erreur Teams ({response.status_code}) : {response.text}")
+        
+        # On affiche tout pour le debug
+        print(f"Code retour Teams : {response.status_code}")
+        print(f"Réponse Teams : {response.text}")
+
     except Exception as e:
-        print(f"❌ Erreur de connexion Teams : {e}")
+        print(f"❌ Erreur critique d'envoi : {e}")
 
 def verifier_sites():
     client_sites = charger_sites_depuis_fichier()
@@ -90,10 +88,12 @@ def verifier_sites():
             if r.status_code != 200:
                 status = "DOWN"
                 detail = f"Erreur {r.status_code}"
+                # On envoie la notif
                 envoyer_notif_teams(site['nom'], site['url'], detail)
         except Exception as e:
             status = "DOWN"
             detail = str(e)
+            # On envoie la notif
             envoyer_notif_teams(site['nom'], site['url'], detail)
 
         resultats.append({
