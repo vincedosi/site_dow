@@ -1,58 +1,79 @@
 [
     {
-        "nom": "Test Crash",
-        "url": "https://httpstat.us/500",
-        "status": "DOWN",
-        "detail": "('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-        "last_check": "2026-02-12 09:38:53"
+        "nom": "DRHAT",
+        "url": "https://www.sengager.fr/",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:41:10"
     },
     {
         "nom": "mangerbouger",
         "url": "https://www.mangerbouger.fr/",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:38:55"
+        "last_check": "2026-02-12 09:41:11"
     },
     {
         "nom": "santementale",
         "url": "https://www.santementale-info-service.fr",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:38:56"
+        "last_check": "2026-02-12 09:41:12"
     },
     {
         "nom": "tabac",
         "url": "https://www.tabac-info-service.fr",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:38:57"
+        "last_check": "2026-02-12 09:41:13"
     },
     {
         "nom": "Mois Sans Tabac",
         "url": "https://mois-sans-tabac.tabac-info-service.fr/",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:38:58"
+        "last_check": "2026-02-12 09:41:14"
     },
     {
         "nom": "vaccination",
         "url": "https://vaccination-info-service.fr",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:38:58"
+        "last_check": "2026-02-12 09:41:15"
     },
     {
         "nom": "alcool",
         "url": "https://www.alcool-info-service.fr/",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:39:00"
+        "last_check": "2026-02-12 09:41:17"
     },
     {
         "nom": "premiersjour",
         "url": "https://www.1000-premiers-jours.fr/fr",
         "status": "UP",
         "detail": "OK",
-        "last_check": "2026-02-12 09:39:01"
+        "last_check": "2026-02-12 09:41:18"
+    },
+    {
+        "nom": "marinenat",
+        "url": "https://lamarinerecrute.gouv.fr/",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:41:19"
+    },
+    {
+        "nom": "DRHAAE",
+        "url": "https://devenir-aviateur.gouv.fr/",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:41:20"
+    },
+    {
+        "nom": "ASC",
+        "url": "https://www.service-civique.gouv.fr/",
+        "status": "UP",
+        "detail": "OK",
+        "last_check": "2026-02-12 09:41:22"
     }
 ]
