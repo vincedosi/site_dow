@@ -6,27 +6,26 @@ on:
   workflow_dispatch: # Permet de lancer manuellement
 
 permissions:
-  contents: write # Important pour sauvegarder le fichier JSON
+  contents: write # Nécessaire pour sauvegarder le fichier JSON
 
 jobs:
   check-and-alert:
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-24.04 # Version fixée pour éviter les surprises de ubuntu-latest
+
     steps:
       - name: Récupérer le code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Installer Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.9'
+          python-version: '3.12'
 
       - name: Installer les dépendances
-        run: pip install requests
+        run: pip install -r requirements.txt
 
       - name: Lancer le script de surveillance
         env:
-          # C'EST ICI QUE ÇA BLOQUAIT ! On donne la clé au script :
           TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
         run: python monitor.py
 
